@@ -1,0 +1,30 @@
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const dependency_mapper_1 = require("./utils/dependency-mapper");
+function parseDependencies(url) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const parsedDependencies = url
+            .split("+")
+            .map(dep => {
+            const parts = dep.split("@");
+            const version = parts.pop();
+            return {
+                name: parts.join("@"),
+                version,
+            };
+        })
+            .reduce((total, next) => (Object.assign(Object.assign({}, total), { [next.name]: next.version })), {});
+        return (0, dependency_mapper_1.default)(parsedDependencies);
+    });
+}
+exports.default = parseDependencies;
+//# sourceMappingURL=parse-dependencies.js.map

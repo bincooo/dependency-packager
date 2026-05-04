@@ -1,0 +1,1 @@
+{"version":3,"file":"expand-dependent-files.js","sourceRoot":"","sources":["../../../functions/packager/packages/expand-dependent-files.ts"],"names":[],"mappings":";;;AAAa,QAAA,OAAO,GAAS;IACzB,OAAO,EAAE;QACL,OAAO,EAAE,QAAQ;QACjB,QAAQ,EAAE;YACN,uCAAuC;SAC1C;KACJ;IACD,gBAAgB,EAAE;QACd,QAAQ,EAAE;YACN,YAAY;YACZ,gBAAgB;SACnB;KACJ;CACJ,CAAA"}
