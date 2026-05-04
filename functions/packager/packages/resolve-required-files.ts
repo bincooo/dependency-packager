@@ -1,10 +1,14 @@
 import { fs } from "mz";
-import { basename, dirname, join } from "path";
+import { basename, join } from "path";
 import {
   IPackage,
   PackageImports,
   PackageJsonExports,
 } from "./find-package-infos";
+
+import {
+  expandDependentFiles
+} from "./expand-dependent-files"
 
 const BLACKLISTED_DIRS = [
   "demo",
@@ -191,6 +195,10 @@ export default async function resolveRequiredFiles(
       });
     }
   }
+
+  files.push(... 
+    expandDependentFiles(packagePath, packageInfo)
+  );
 
   return files;
 }
