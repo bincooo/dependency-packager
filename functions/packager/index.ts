@@ -1,5 +1,5 @@
 import { Callback, Context } from "aws-lambda";
-import { S3 } from "aws-sdk";
+import { S3, Endpoint } from "aws-sdk";
 
 import { fs } from "mz";
 import * as path from "path";
@@ -18,12 +18,32 @@ import getHash from "./utils/get-hash";
 import { VERSION } from "../config";
 import { execSync } from "child_process";
 
-const { BUCKET_NAME } = process.env;
+const {
+  S3_ENDPOINT,
+  S3_ACCESS_KEY,
+  S3_SECRET_KEY,
+  BUCKET_NAME,
+} = process.env;
 const SAVE_TO_S3 = !process.env.DISABLE_CACHING;
 
 export const BASE_INSTALL_DIR = process.env.BASE_DIR || "/tmp";
 
-const s3 = new S3();
+let s3 = new S3();
+if (SAVE_TO_S3) {
+  console.log("[INFO] S3_ENDPOINT: " + S3_ENDPOINT);
+  console.log("[INFO] S3_ACCESS_KEY: " + S3_ACCESS_KEY);
+  console.log("[INFO] S3_SECRET_KEY: " + S3_SECRET_KEY);
+  console.log("[INFO] BUCKET_NAME: " + BUCKET_NAME);
+  s3 = new S3({
+    endpoint: new Endpoint(S3_ENDPOINT as string),
+    accessKeyId: S3_ACCESS_KEY,
+    secretAccessKey: S3_SECRET_KEY,
+    region: "us-east-1",
+    s3ForcePathStyle: true,
+    signatureVersion: "v4",
+  });
+  console.log("[INFO] AWS S3 initialized.");
+}
 
 /**
  * Remove a file from the content
@@ -143,6 +163,53 @@ function verifyModuleField(pkg: IPackage, pkgLoc: string) {
   }
 }
 
+
+function getFileFromS3(
+  keyPath: string,
+): Promise<string | null> {
+  return new Promise((resolve, reject) => {
+    if (!BUCKET_NAME) {
+      reject("No BUCKET_NAME provided");
+      return;
+    }
+
+    console.log("[INFO] trying fetch S3 ...")
+    s3.getObject(
+      {
+        Bucket: BUCKET_NAME,
+        Key: keyPath,
+      },
+      (err, packageData) => {
+        if (err && err.name !== "AccessDenied") {
+          reject(err);
+          return;
+        }
+
+        if (!packageData || !packageData.Body) {
+          reject(new Error(`Invalid JSON in s3://${BUCKET_NAME}/${keyPath}: not found`));
+          return;
+        }
+
+        const buf = Buffer.isBuffer(packageData.Body)
+            ? packageData.Body
+            : Buffer.from(packageData.Body as Uint8Array); // 兼容 Uint8Array
+        const isGzip =
+          packageData.ContentEncoding === "gzip" || (buf.length >= 2 && buf[0] === 0x1f && buf[1] === 0x8b);
+
+        const rawBuf = isGzip ? zlib.gunzipSync(buf as any) : buf;
+        
+        try {
+          const json = JSON.parse(rawBuf.toString("utf8"));
+          resolve(json);
+        } catch (e) {
+          reject(new Error(`Invalid JSON in s3://${BUCKET_NAME}/${keyPath}: ${e.message}`));
+        }
+      },
+    );
+  });
+}
+
+
 let packaging = false;
 const packagingDeps = new Set<string>();
 
@@ -187,6 +254,21 @@ export async function call(event: any, context: Context, cb: Callback) {
     }
   }
 
+  if (SAVE_TO_S3) {
+    const bundlePath = `v${VERSION}/packages/${dependency.name}/${dependency.version}.json`;
+    try {
+      const chunk = await getFileFromS3(bundlePath);
+      if (chunk) {
+        console.log(`[INFO] Returning cached version for '${dependency.name}/${dependency.version}'`);
+        cb(undefined, chunk);
+        return;
+      }
+    } catch(err) {
+      console.error(err);
+    }
+  }
+
+  // 在下载资源的时候锁住
   if (packagingDeps.has(hash)) {
     return;
   }
@@ -236,7 +318,7 @@ export async function call(event: any, context: Context, cb: Callback) {
       ),
     };
 
-    if (process.env.IN_LAMBDA) {
+    if (SAVE_TO_S3) {
       saveToS3(dependency, response);
     }
 
@@ -287,7 +369,7 @@ export async function call(event: any, context: Context, cb: Callback) {
 }
 
 const PORT = process.env.PORT || 4545;
-if (!process.env.IN_LAMBDA) {
+// if (!process.env.IN_LAMBDA) {
   /* tslint:disable no-var-requires */
   const express = require("express");
   /* tslint:enable */
@@ -300,6 +382,10 @@ if (!process.env.IN_LAMBDA) {
 
     const ctx = {} as Context;
     const dep = { name: packageParts.join("@"), version };
+    if (version == "favicon.ico") {
+      res.status(404);
+      return;
+    }
 
     console.log(dep);
     call(dep, ctx, (err: any, result: any) => {
@@ -325,4 +411,4 @@ if (!process.env.IN_LAMBDA) {
   app.listen(PORT, () => {
     console.log("Listening on " + PORT);
   });
-}
+// }

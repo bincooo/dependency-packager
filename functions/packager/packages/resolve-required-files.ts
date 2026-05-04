@@ -7,7 +7,7 @@ import {
 } from "./find-package-infos";
 
 import {
-  expandDependentFiles
+  modules
 } from "./expand-dependent-files"
 
 const BLACKLISTED_DIRS = [
@@ -197,8 +197,47 @@ export default async function resolveRequiredFiles(
   }
 
   files.push(... 
-    expandDependentFiles(packagePath, packageInfo)
+    await expandDependentFiles(packagePath, packageInfo, getFilePathsInDirectory)
   );
 
   return files;
+}
+
+
+async function expandDependentFiles(
+    packagePath: string,
+    packageInfo: IPackage,
+    getFilePaths: (path: string) => Promise<string[]>
+) {
+    const files: string[] = [];
+    const module = modules[packageInfo.name];
+    if (!module) {
+        return files;
+    }
+
+    if (module.version && module.version != packageInfo.version) {
+        return files;
+    }
+
+    for(const manifest of module.manifest as string[]) {
+        if (manifest.endsWith("*")) {
+            const p = join(packagePath, manifest.substring(0, manifest.length-1));
+            console.log(`[INFO] match manifest: ${p}*`);
+            files.push(...
+                (await getFilePaths(p)),
+            );
+        } else {
+            try {
+                const p = join(packagePath, manifest);
+                const stat = fs.statSync(p);
+                if (stat.isFile()) {
+                    files.push(p);
+                }
+            } catch (e) {
+                console.log(`[ERROR] join manifest: ${manifest}, ` + e);
+            }
+        }
+    }
+
+    return files;
 }
