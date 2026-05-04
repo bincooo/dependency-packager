@@ -3,7 +3,6 @@ import { S3 } from "aws-sdk";
 
 import { fs } from "mz";
 import * as path from "path";
-import * as Raven from "raven";
 import * as rimraf from "rimraf";
 import * as zlib from "zlib";
 import fetch from "node-fetch";
@@ -17,17 +16,12 @@ import findRequires, { IFileData } from "./packages/find-requires";
 import getHash from "./utils/get-hash";
 
 import { VERSION } from "../config";
-import env from "./config.secret";
 import { execSync } from "child_process";
 
 const { BUCKET_NAME } = process.env;
 const SAVE_TO_S3 = !process.env.DISABLE_CACHING;
 
 export const BASE_INSTALL_DIR = process.env.BASE_DIR || "/tmp";
-
-if (env.SENTRY_URL) {
-  Raven.config(env.SENTRY_URL!).install();
-}
 
 const s3 = new S3();
 
@@ -263,13 +257,6 @@ export async function call(event: any, context: Context, cb: Callback) {
     }
 
     console.error("ERROR", e);
-
-    Raven.captureException(e, {
-      tags: {
-        hash,
-        dependency: `${dependency.name}@${dependency.version}`,
-      },
-    });
 
     if (process.env.IN_LAMBDA) {
       // We try to call fly, which is a service with much more disk space, retry with this.

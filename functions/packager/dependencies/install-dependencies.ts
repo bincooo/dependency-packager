@@ -9,11 +9,12 @@ export default function installDependencies(
 ) {
   return new Promise<void>((resolve, reject) => {
     const depString = `${dependency.name}@${dependency.version}`;
+    console.log("[INFO] install: " + depString);
 
     const spec = npa(depString);
+    console.log("[INFO] spec: " + spec);
 
-    exec(
-      `mkdir -p ${packagePath} && cd ${packagePath} && HOME=${BASE_INSTALL_DIR} node ${join(
+    const command = `mkdir -p ${packagePath} && cd ${packagePath} && HOME=${BASE_INSTALL_DIR} node ${join(
         __dirname,
         "../../../node_modules",
         "yarn",
@@ -21,7 +22,9 @@ export default function installDependencies(
         "cli",
       )} add ${depString} ${
         spec.type === "git" ? "" : "--ignore-scripts"
-      } --no-lockfile --non-interactive --no-bin-links --ignore-engines --skip-integrity-check --cache-folder ./`,
+      } --modules-folder ${packagePath}/node_modules --no-lockfile --non-interactive --no-bin-links --ignore-engines --skip-integrity-check --cache-folder ./`
+    console.log("[INFO] exec command: " + command);
+    exec(command,
       (err, stdout, stderr) => {
         if (err) {
           console.warn("got error from install: " + err);
