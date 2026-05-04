@@ -137,6 +137,7 @@ function getFileFromS3(keyPath) {
             reject("No BUCKET_NAME provided");
             return;
         }
+        console.log("[INFO] trying fetch S3 ...");
         s3.getObject({
             Bucket: BUCKET_NAME,
             Key: keyPath,
@@ -205,10 +206,6 @@ function call(event, context, cb) {
                 console.log("Continuing packaging...");
             }
         }
-        if (packagingDeps.has(hash)) {
-            return;
-        }
-        packagingDeps.add(hash);
         if (SAVE_TO_S3) {
             const bundlePath = `v${config_1.VERSION}/packages/${dependency.name}/${dependency.version}.json`;
             try {
@@ -223,6 +220,11 @@ function call(event, context, cb) {
                 console.error(err);
             }
         }
+        // 在下载资源的时候锁住
+        if (packagingDeps.has(hash)) {
+            return;
+        }
+        packagingDeps.add(hash);
         packaging = true;
         try {
             yield (0, install_dependencies_1.default)(dependency, packagePath);
