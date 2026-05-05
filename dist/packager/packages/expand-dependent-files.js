@@ -13,6 +13,11 @@ exports.modules = {
             "/helpers/*",
             "/regenerator/*"
         ]
-    }
+    },
+    "antd-style": {
+        manifest: [
+            "/lib/index.js",
+        ]
+    },
 };
 //# sourceMappingURL=expand-dependent-files.js.map
