@@ -202,7 +202,7 @@ function getFileFromS3(
           const json = JSON.parse(rawBuf.toString("utf8"));
           resolve(json);
         } catch (e) {
-          reject(new Error(`Invalid JSON in s3://${BUCKET_NAME}/${keyPath}: ${e.message}`));
+          reject(new Error(`Invalid JSON in s3://${BUCKET_NAME}/${keyPath}: The specified key does not exist`));
         }
       },
     );
@@ -225,9 +225,11 @@ export async function call(event: any, context: Context, cb: Callback) {
   const t = Date.now();
 
   if (!hash) {
+    cb(new Error("opps!!"));
     return;
   }
   if (!dependency) {
+    cb(new Error("opps!!"));
     return;
   }
   const packagePath = path.join(BASE_INSTALL_DIR, hash);
@@ -389,7 +391,11 @@ const PORT = process.env.PORT || 4545;
 
     console.log(dep);
     call(dep, ctx, (err: any, result: any) => {
-      console.log(err);
+      if (err) {
+        console.log(err);
+        res.status(500).text(err);
+        return;
+      }
 
       // const size = {};
 

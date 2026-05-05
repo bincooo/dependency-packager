@@ -16,4 +16,14 @@ export const modules: Record<string, { version?: string, manifest: string[] }> =
             "/lib/index.js",
         ]
     },
+    "@tanstack/react-query": {
+        manifest: [
+            "/build/modern/index.js",
+        ]
+    },
+    "@rc-component/util": {
+        manifest: [
+            "/lib/*",
+        ]
+    },
 }
