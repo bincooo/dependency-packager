@@ -27,6 +27,7 @@ const BLACKLISTED_DIRS = [
     "min",
     "node_modules",
 ];
+const MODULES = (0, expand_dependent_files_1.loadModulesConfig)();
 function getFilePathsInDirectory(path) {
     return __awaiter(this, void 0, void 0, function* () {
         const entries = yield mz_1.fs.readdir(path);
@@ -177,11 +178,11 @@ exports.default = resolveRequiredFiles;
 function expandDependentFiles(packagePath, packageInfo, getFilePaths) {
     return __awaiter(this, void 0, void 0, function* () {
         const files = [];
-        const module = expand_dependent_files_1.modules[packageInfo.name];
+        const module = MODULES[packageInfo.name];
         if (!module) {
             return files;
         }
-        if (module.version && module.version != packageInfo.version) {
+        if (module.version && !module.version.includes(packageInfo.version)) {
             return files;
         }
         for (const manifest of module.manifest) {
