@@ -160,7 +160,7 @@ function getFileFromS3(keyPath) {
                 resolve(json);
             }
             catch (e) {
-                reject(new Error(`Invalid JSON in s3://${BUCKET_NAME}/${keyPath}: ${e.message}`));
+                reject(new Error(`Invalid JSON in s3://${BUCKET_NAME}/${keyPath}: The specified key does not exist`));
             }
         });
     });
