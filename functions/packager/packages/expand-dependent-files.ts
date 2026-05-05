@@ -1,29 +1,10 @@
-export const modules: Record<string, { version?: string, manifest: string[] }> = {
-    "react": {
-        version: "17.0.2",
-        manifest: [
-            "/cjs/react-jsx-runtime.development.js",
-        ]
-    },
-    "@babel/runtime": {
-        manifest: [
-            "/helpers/*",
-            "/regenerator/*"
-        ]
-    },
-    "antd-style": {
-        manifest: [
-            "/lib/index.js",
-        ]
-    },
-    "@tanstack/react-query": {
-        manifest: [
-            "/build/modern/index.js",
-        ]
-    },
-    "@rc-component/util": {
-        manifest: [
-            "/lib/*",
-        ]
-    },
+import { fs } from "mz";
+import { join } from "path";
+
+function loadModulesConfig() : Record<string, { version?: string[], main?: string, manifest?: string[] }> {
+  const jsonPath = join(__dirname, "../../..", "modules.json");
+  const chunk = fs.readFileSync(jsonPath, "utf8");
+  return JSON.parse(chunk);
 }
+
+export const modules = loadModulesConfig();

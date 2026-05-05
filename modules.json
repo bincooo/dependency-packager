@@ -1,0 +1,25 @@
+{
+    "react": {
+        "version": ["17.0.2"],
+        "manifest": [
+            "/cjs/react-jsx-runtime.development.js"
+        ]
+    },
+    "@babel/runtime": {
+        "manifest": [
+            "/helpers/*",
+            "/regenerator/*"
+        ]
+    },
+    "antd-style": {
+        "manifest": [
+            "/lib/index.js"
+        ]
+    },
+    "@tanstack/react-query": {
+        "main": "skip",
+        "manifest": [
+            "/build/modern/index.js"
+        ]
+    }
+}

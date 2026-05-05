@@ -5,10 +5,7 @@ import {
   PackageImports,
   PackageJsonExports,
 } from "./find-package-infos";
-
-import {
-  modules
-} from "./expand-dependent-files"
+import { modules } from "./expand-dependent-files"
 
 const BLACKLISTED_DIRS = [
   "demo",
@@ -25,6 +22,7 @@ const BLACKLISTED_DIRS = [
   "min",
   "node_modules",
 ];
+
 
 async function getFilePathsInDirectory(path: string): Promise<string[]> {
   const entries = await fs.readdir(path);
@@ -150,11 +148,35 @@ export default async function resolveRequiredFiles(
 
   let mains: string[];
 
-  if (entries.length === 0) {
+  let skip = false;
+  const module = modules[packageInfo.name];
+  if (module) {
+    let main = module.main;
+    // 版本不包含，跳过处理
+    if (module.version && !module.version.includes(packageInfo.version)) {
+      main = undefined;
+    }
+
+    // 匹配到了入口字段 skip 跳过 -> main -> module
+    switch(main) {
+      case "skip":
+        skip = true;
+        break;
+      case "module":
+        if (packageInfo.module) {
+          packageInfo.main = "";
+        }
+        break;
+    }
+  }
+
+  if (skip) {
+    mains = [];
+  } else if (entries.length === 0) {
     const main =
       typeof packageInfo.browser === "string"
         ? packageInfo.browser
-        : packageInfo.module || packageInfo.main;
+        : packageInfo.main || packageInfo.module;
 
     mains = main ? [main] : [];
   } else {
@@ -215,11 +237,11 @@ async function expandDependentFiles(
         return files;
     }
 
-    if (module.version && module.version != packageInfo.version) {
+    if (module.version && !module.version.includes(packageInfo.version)) {
         return files;
     }
 
-    for(const manifest of module.manifest as string[]) {
+    for(const manifest of (module.manifest ?? []) as string[]) {
         if (manifest.endsWith("*")) {
             const p = join(packagePath, manifest.substring(0, manifest.length-1));
             console.log(`[INFO] match manifest: ${p}*`);

@@ -181,6 +181,11 @@ function getFileFromS3(
       },
       (err, packageData) => {
         if (err && err.name !== "AccessDenied") {
+          if (err.code == "NoSuchKey") {
+            reject(new Error(`Invalid JSON in s3://${BUCKET_NAME}/${keyPath}: The specified key does not exist`));
+            return;
+          }
+
           reject(err);
           return;
         }
