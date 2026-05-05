@@ -24,5 +24,10 @@ exports.modules = {
             "/build/modern/index.js",
         ]
     },
+    "@rc-component/util": {
+        manifest: [
+            "/lib/*",
+        ]
+    },
 };
 //# sourceMappingURL=expand-dependent-files.js.map
