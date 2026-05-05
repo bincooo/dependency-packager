@@ -198,6 +198,7 @@ function resolveRequiredFiles(packagePath, packageInfo) {
 }
 exports.default = resolveRequiredFiles;
 function expandDependentFiles(packagePath, packageInfo, getFilePaths) {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         const files = [];
         const module = expand_dependent_files_1.modules[packageInfo.name];
@@ -207,7 +208,7 @@ function expandDependentFiles(packagePath, packageInfo, getFilePaths) {
         if (module.version && !module.version.includes(packageInfo.version)) {
             return files;
         }
-        for (const manifest of module.manifest) {
+        for (const manifest of ((_a = module.manifest) !== null && _a !== void 0 ? _a : [])) {
             if (manifest.endsWith("*")) {
                 const p = (0, path_1.join)(packagePath, manifest.substring(0, manifest.length - 1));
                 console.log(`[INFO] match manifest: ${p}*`);
