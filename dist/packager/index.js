@@ -178,9 +178,11 @@ function call(event, context, cb) {
         const hash = (0, get_hash_1.default)(dependency);
         const t = Date.now();
         if (!hash) {
+            cb(new Error("opps!!"));
             return;
         }
         if (!dependency) {
+            cb(new Error("opps!!"));
             return;
         }
         const packagePath = path.join(exports.BASE_INSTALL_DIR, hash);
@@ -314,7 +316,11 @@ app.get("/*", (req, res) => {
     }
     console.log(dep);
     call(dep, ctx, (err, result) => {
-        console.log(err);
+        if (err) {
+            console.log(err);
+            res.status(500).text(err);
+            return;
+        }
         // const size = {};
         // console.log(result.contents);
         // Object.keys(result.contents).forEach(p => {

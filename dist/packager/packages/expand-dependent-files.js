@@ -19,5 +19,10 @@ exports.modules = {
             "/lib/index.js",
         ]
     },
+    "@tanstack/react-query": {
+        manifest: [
+            "/build/modern/index.js",
+        ]
+    },
 };
 //# sourceMappingURL=expand-dependent-files.js.map
