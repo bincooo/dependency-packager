@@ -1,4 +1,4 @@
-export const modules : any = {
+export const modules: Record<string, { version?: string, manifest: string[] }> = {
     "react": {
         version: "17.0.2",
         manifest: [
@@ -10,5 +10,10 @@ export const modules : any = {
             "/helpers/*",
             "/regenerator/*"
         ]
-    }
+    },
+    "antd-style": {
+        manifest: [
+            "/lib/index.js",
+        ]
+    },
 }
