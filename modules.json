@@ -17,13 +17,9 @@
         ]
     },
     "@tanstack/react-query": {
+        "main": "skip",
         "manifest": [
             "/build/modern/index.js"
-        ]
-    },
-    "@rc-component/util": {
-        "manifest": [
-            "/lib/*"
         ]
     }
 }

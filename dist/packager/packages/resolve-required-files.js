@@ -27,7 +27,6 @@ const BLACKLISTED_DIRS = [
     "min",
     "node_modules",
 ];
-const MODULES = (0, expand_dependent_files_1.loadModulesConfig)();
 function getFilePathsInDirectory(path) {
     return __awaiter(this, void 0, void 0, function* () {
         const entries = yield mz_1.fs.readdir(path);
@@ -129,10 +128,33 @@ function resolveRequiredFiles(packagePath, packageInfo) {
     return __awaiter(this, void 0, void 0, function* () {
         const entries = getExports(packageInfo);
         let mains;
-        if (entries.length === 0) {
+        let skip = false;
+        const module = expand_dependent_files_1.modules[packageInfo.name];
+        if (module) {
+            let main = module.main;
+            // 版本不包含，跳过处理
+            if (module.version && !module.version.includes(packageInfo.version)) {
+                main = undefined;
+            }
+            // 匹配到了入口字段 skip 跳过 -> main -> module
+            switch (main) {
+                case "skip":
+                    skip = true;
+                    break;
+                case "module":
+                    if (packageInfo.module) {
+                        packageInfo.main = "";
+                    }
+                    break;
+            }
+        }
+        if (skip) {
+            mains = [];
+        }
+        else if (entries.length === 0) {
             const main = typeof packageInfo.browser === "string"
                 ? packageInfo.browser
-                : packageInfo.module || packageInfo.main;
+                : packageInfo.main || packageInfo.module;
             mains = main ? [main] : [];
         }
         else {
@@ -178,7 +200,7 @@ exports.default = resolveRequiredFiles;
 function expandDependentFiles(packagePath, packageInfo, getFilePaths) {
     return __awaiter(this, void 0, void 0, function* () {
         const files = [];
-        const module = MODULES[packageInfo.name];
+        const module = expand_dependent_files_1.modules[packageInfo.name];
         if (!module) {
             return files;
         }
